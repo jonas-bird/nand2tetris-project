@@ -1,0 +1,103 @@
+#+title: Nand To Tetris
+
+* The Elements of Computing Systems: Building a Modern Computer from First Principles 2nd ed
++ http://www.nand2tetris.org
+
+Start with a simulation of a gate and end up at tetris
+
+* Hardware I
+onion layers of abstraction separate the source code of a high level interpreted/hosted language and the underlying operation of hardware. Even assembly language is an agreed upon shorthand for binary codes that are embodied by a hardware architecture made up of arrangements of silicon and
+
+*** Abstraction and Implementation
+
+Building a computer system starting from basic components requires dividing the complexity into modules that can be tackled individually
+
+A well designed modular system decreases the interrelation (coupling) between modules to the point that the system can be built in parallel. This is enabled by limiting ourselves to using the module's abstraction (interface) rather than hooking into the implementation details.
+** Boolean Logic
+
+*** Boolean Algebra
+
+The various more complex statements can be built up from (AND OR NOT) these can be built up from NAND
+
+A Boolean function can be defined using two different representations.
++ a *truth table*
+  | x | y | z | (xOry)AndNot(z) |
+  |---+---+---+-----------------|
+  | 0 | 0 | 0 | 0               |
+  | 0 | 0 | 1 | 0               |
+  | 0 | 1 | 0 | 1               |
+  | 0 | 1 | 1 | 0               |
+  | 1 | 0 | 0 | 1               |
+  | 1 | 0 | 1  | 0               |
+  | 1 | 1 | 0 | 1               |
+  | 1 | 1 | 1 | 0               |
++ Boolean function made of Boolean expressions
+  - example f(x,y,z) = (x Or y) And Not (z)
+*** Truth Tables and Boolean Expressions
+If we have a function of n variables represented by a Boolean expression, we can construct the function's truth table.
++ we can also synthesize the underlying function if given a truth table
+
+Often when designing hardware we work out the Boolean expression from a truth table and then work out how to represent it with logic gates
+*** 1.2 Logic Gates
+A *gate* is a physical device that implements a simple Boolean function.
++ there are many possible ways such a gate 'could' be constructed, most commonly (at least until the quantum computer revolution gets going) we construct them from transistors
++ the CS side of things does not focus on the electronics needed for the implementation (as much fun as the details can be) CS can be applied to any system capable of implementing Boolean algebra
+
+
+* Appendices
+** From Appendix 1: Boolean Function Synthesis
+*** A1.1 Boolean Algebra
+Algebraic properties of And, Or, Not
+
+Commutative laws:
++ x AND y = y AND x
++ x OR y = y OR x
+
+Associative laws:
++ x And (y And z)=(x And y) And z
++ x OR(y OR z) = (x OR y) OR z
+
+Distributive laws:
++ x And (y or z) = (x and y) or (x and z)
++ x Or (y And z) = (x Or y) And (x Or z)
+
+De Morgans laws:
++ Not(x And y) = Not(x) Or Not(y)
++ NOT(x OR y) = NOT(x) AND NOT(y)
+
+Idempotent laws:
++ x And x=x
++ x Or x=x
+
+These properties can be applied to Boolean functions to simplify them
++ example: !(!(x) && !(x || y))= x||y
+  - !(!(x) && !(x || y)) = !(!(x) && (!(x)&& !(y))) from De Morgan's law
+  - !(!(x) && (!(x)&& !(y)) = !((!(x)&& !(x))&& !(y)) from associative law
+  - !((!(x)&& !(x))&& !(y) =!(!(x) && !(y)) idepotent law
+  - !(!(x) && !(y) = !(!(x) || !(!(y))) De Morgan's again
+
+Simplifying Boolean expressions is important. The first version would have required 5 logic gates vs the 1 for the simplified version
++ requires skill and experience to apply, is considered an NP-hard problem
+
+
+
+*** A1.2 Synthesizing Boolean Functions
+Every truth table can be represented by a Boolean expression
+
+Constructive algo:
+
+*** A1.3 Expressive power of Nand
+
+Lemma 1: Any Boolean function can be represented by a Boolean expression containing only And, Or, and Not operators
+
+this is very much unlike functions over integer numbers which can not be reduced to such simple building blocks
+
+Lemma 2: Any Boolean function can be represented by a Boolean expression containing only Not and And operators
+Proof: By using De Morgan's law the Or operator can be expressed using the Not and And operators
+
+Theorem: Any Boolean function can be represented by a Boolean expression containing only Nan operators
+Proof:
++ Not(x) = Nand(x,x)
++ And(x,y) = Not(Nand(x,y))
++ since not can be expressed through Nand...
+* supplemental material
