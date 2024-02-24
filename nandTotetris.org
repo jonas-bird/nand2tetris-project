@@ -122,7 +122,7 @@ Output:    out[16]
 Function:  if (sel==00,01,10, or 11) then out = a,b,c, or d
 Comment:   The assignment is a 16-bit operation: "out = a" means "for i = 0..15 out [i] = a[i]"
 
-Chip name: Muc8Way16
+Chip name: Mux8Way16
 Input:     a[16],b[16],c[16],d[16],e[16],f[16],g[16],h[16], sel[2]
 Output:    out[16]
 Function:  if (sel==000,001,010, ..., or 111)
@@ -167,21 +167,159 @@ The general methodology is that I am trying to build a computer one step at a ti
   - DMUX4WAY
   - DMUX8way
   These are commonly used in digital devices. They are also all the elementary logic gates needed to build the Hack computer
-
-Mux/Dmux: 2 inputs and a selector
+**** Mux/DeMux
+Mux: inputs and a selector
 if (sel==0)
     out=a
 else
     out=b
 
+DEmux: outputs and a selector
+
+Used a bunch in communication (my major interest)
++ Allows multiple msgs to use a single transmission line
++ allows for async operations (you dont need a common clock?)
+
+**** And16
+You have 2 16-bit busses coming in that need to be combined into a 16-bit output with a[i] AND b[i] = Out[i]
+
+This is done in parallel, not a serial operation.
+Look at appendix A for syntax for this
+**** MultiWay Multiplexor
+
+16bit, 4-way, multiplexer...
+
+| sel[1] | sel[0] | out |
+|--------+--------+-----|
+|      0 |      0 | a   |
+|      0 |      1 | b   |
+|      1 |      0 | c   |
+|      1 |      1 | d   |
+|        |        |     |
+
+So you need to combine the sel line to address the output.
+**** Building the gates
+
+
 * Project 1 Design Notes
 
 *Objective* : Implement all the logic gates presented in the chapter. The only building blocks that you can use are primitive Nand gates and the composite gates that you will gradually build on top of them
 
-** AND
+** DONE NOT
+Easy NOT(x) = (x NAND x)
+** DONE AND
 I already saw the proof that one can build the AND, NOT and OR gates using the NAND gate so I already have seen one implementation.
-Truth table:
+(x AND y) = NOT(x NAND y)
+** DONE OR
+This is a case where there might be a few ways that I want to try
+(x OR y) = NOT(NOT(x) AND NOT(y)) // from De Morgan's law
 
+x or y = (x nand x) nand (y nand y)
+** DONE MUX
+can be built with AND, OR, NOT (like all gates...)
+
+truth table:
+| a | b | sel | out |
+|---+---+-----+-----|
+| 0 | 0 | 0   | 0   |
+| 1 | 0 | 0   | 1   | ((a and not(b)) and not(sel)
+| 0 | 1 | 0   | 0   |
+| 1 | 1 | 0   | 1   | ((a and b) and not(sel))
+| 0 | 0 | 1   | 0   |
+| 1 | 0 | 1   | 0   |
+| 1 | 1 | 1   | 1   | ((a and b) and sel)
+| 0 | 1 | 1   | 1   | ((not(a) and b) and sel
+
+(a and not sel) or (b and sel)
+
+
+Despite a typo that had me confused for a minute I got it working on my first try with:
+#+begin_src nand-hdl
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux.hdl
+/**
+ * Multiplexor:
+ * out = ((sel == 0), a, b)
+ */
+CHIP Mux {
+    IN a, b, sel;
+    OUT out;
+
+    PARTS:
+    Not(in=sel, out=switchA);
+    And(a=a, b=switchA, out=aout);
+    And(a=b, b=sel, out=bout);
+    Or(a=aout, b=bout, out=out);
+}
+
+
+#+end_src
+
+Is there a way to make this simpler?
+(a nand sel) or (b and sel)
+((a nand sel) nand (a nand sel)) nand ((b and sel) nand (b and sel))
+((a nand sel) nand (a nand sel)) nand (not(b nand sel) nand not(b nand sel))
+?
+I just drew it out on a piece of paper and worked out from the truth table:
+(b nand sel) nand ((sel nand sel) nand a)
+seems to pass the test script so...
+#+begin_src nand-hdl
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux.hdl
+/**
+ * Multiplexor:
+ * out = ((sel == 0), a, b)
+ */
+CHIP Mux {
+    IN a, b, sel;
+    OUT out;
+
+    PARTS:
+    Nand(a=b, b=sel, out=l1);
+    Nand(a=sel, b=sel, out=l2);
+    Nand(a=a, b=l2, out=l0);
+    Nand(a=l0, b=l1, out=out);
+}
+
+
+#+end_src
+** DONE XOR
+out = (((a == 0) & (b = 1)) | ((a == 1) & (b = 0)), 1, 0)
+
+So the inputs need to be different:
+not(a and b) and not(not(a) and not(b))
+not(a and b) and (a or b)
+(a nand b) and (a or b)
+
+Nice and simple:
+#+begin_src nand-hdl
+
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Xor.hdl
+/**
+ * Exclusive-or gate:
+ * out = (((a == 0) & (b = 1)) | ((a == 1) & (b = 0)), 1, 0)
+ */
+CHIP Xor {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+    Nand(a=a,b=b, out=l0);
+    Or(a=a,b=b, out=l1);
+    And(a=l0,b=l1, out=out);
+}
+#+end_src
+
+
+** TODO DMUX
+[a, b] = ((sel == 0), [in, 0], [0, in])
 
 
 
