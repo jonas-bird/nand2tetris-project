@@ -13,7 +13,8 @@ onion layers of abstraction separate the source code of a high level interpreted
 Building a computer system starting from basic components requires dividing the complexity into modules that can be tackled individually
 
 A well designed modular system decreases the interrelation (coupling) between modules to the point that the system can be built in parallel. This is enabled by limiting ourselves to using the module's abstraction (interface) rather than hooking into the implementation details.
-** Boolean Logic
+
+** Section 1 Boolean Logic
 
 *** Boolean Algebra
 
@@ -42,6 +43,146 @@ Often when designing hardware we work out the Boolean expression from a truth ta
 A *gate* is a physical device that implements a simple Boolean function.
 + there are many possible ways such a gate 'could' be constructed, most commonly (at least until the quantum computer revolution gets going) we construct them from transistors
 + the CS side of things does not focus on the electronics needed for the implementation (as much fun as the details can be) CS can be applied to any system capable of implementing Boolean algebra
+
+**** Primitive and composite gates
+Since logic gates output the same range of data they input they can be chained to arbitrary length.
+
+We can describe a logic gate by its implementation, or by its interface (inputs and outputs)
++ the interface of any given gate is unique, there is only one way it can be specified
+  - though this specification can be described using more than one method (truth table, Boolean expression, etc)
++ a gate may be built in more than one way. That is there are multiple arrangements of primitive gates that can give rise to the behavior of a composite gate
+  - usually when choosing an implementation the simplest (consisting of the fewest sub-components and connections) is best. This is for reasons of cost, heat dissipation, size, etc, etc...
+
+*** 1.3 Hardware Construction
+In the real world (TM) manufacturers don't just jump from a description of the Boolean logic to a completed component via a diagram of various gates
++ /for one thing there are a lot of other considerations in a real circuit.../
+
+**** Hardware Description Language
+This provides a way for a hardware designer to specify the logic of a chip in a way that can be tested in a computer simulation.
+
+Once the basic logic is tested the real work of dealing with energy consumption, heat, impedance, cost engineering...
+
+Luckily for me since I am not designing a chip for actual production I can stick to the simulation!
+Also the HDL and tooling is a simplified version designed to help me get a taste of how real engineers design chips.
+
+Building an Xor Gate:
++ the HDL definition of the chip consists of a header section and a parts section
+  - the header section specifies the interface
+  - parts section describes the sub-elements that the architecture is made from.
+
+The Parts section is made up of statements
++ a single statement describes a part. From its name to an expression that describes its connections to the other parts.
+
+Testing:
++ the simulation program comes with test scripts that should allow me to make sure that whatever I come up with at least works.
+
+*** 1.4 Specification
+
+Basic Logic Gates:
++ NOT, AND, OR, XOR
+
+Multiplexer:
++ 3 input gate.
++ 2 input bits, named a and b, are data bits
++ the 3rd bit is the selection bit.
++ named multiplexer because in communication devices they are used to serialize input signals over a single communication channel
++ Function: if (sel==0) then out =a, else out = b
+
+Demultiplexer:
++ takes a single input and routes it to one of two outputs.
+
+**** 1.4.3 Multi-Bit Versions of Basic Gates
+/this is where my previous understanding begins to get a bit thin - I have worked with some of this stuff hands on, but in terms of theory I have less of a grounding/
+The HDL we are using treats different n-bit gates the same as a single bit other than we can access a specific bit via an index so ~out 3 = in 5~ will set the 3rd bit of the output to the value of the 5th input bit.
++ bits are indexed from right to left with the rightmost being the 0th and the leftmost the 15th (for a 16-bit system)
+
+example of Not16
++ for i = 0..15 out[i] = Not(in[i])
+
+Multi-bit multiplexer:
+#+begin_src nand-hdl
+Chip name: Mux16
+Input:     a[16], b[16], sel
+Output:    out[16]
+Function:  if (sel==0) then for i = 0..15 out[i] = a[i],
+           else for i = 0..15 out[i] = b[i]
+#+end_src
+
+**** 1.4.4 Multi-Way Versions of Basic Gates
+
+Multi-way OR: an m-way OR gate outputs 1 if at least one of its m input bits is 1, and 0 otherwise
+
+Multi-way/Multi-bit multiplexer: an m-way n-bit multiplexer selects on of its m n-bit inputs, and outputs it to its n-bit output. The selection is specified by a set of k selection bits. k = log2 m
+
+16-bit multiplexers:
+#+begin_src nand-hdl
+Chip name: Mux4Way16
+Input:     a[16],b[16],c[16],d[16],sel[2]
+Output:    out[16]
+Function:  if (sel==00,01,10, or 11) then out = a,b,c, or d
+Comment:   The assignment is a 16-bit operation: "out = a" means "for i = 0..15 out [i] = a[i]"
+
+Chip name: Muc8Way16
+Input:     a[16],b[16],c[16],d[16],e[16],f[16],g[16],h[16], sel[2]
+Output:    out[16]
+Function:  if (sel==000,001,010, ..., or 111)
+           then out = a,b,c,d, ..., or h
+Comment:   The assignment is a 16-bit operation: "out = a" means "for i = 0..15 out [i] = a[i]"
+#+end_src
+
+*** 1.5 Implementation
+
+**** 1.5.1 Behavioral simulation
+If we are just playing around with Boolean logic we don't need to do a simulation.
++ using OOP we can create a set of classes that implement a generic version of the functionality of each chip
+  - use constructors to create instances
+  - methods to evaluate the logic and represent the behavior of the chip
++ we can combine the instances of simpler classes into more complex 'chips' and evaluate how (under idealized circumstances) the logic behaves.
++ this approach is called *behavioral simulation* and allows us to experiment with and define chip interfaces before moving on to building them in HDL
+The NAND to Tetris hardware simulation, besides acting as a simulated HDL program can also do behavioral simulation with built in software implementations of the chips we will use late.
+
+Rather than a parts section we can just use a =BUILTIN <chip>= statement
+
+**** 1.5.2 HArdware Implementation
+we get the Nand as a built-in and will work out how to construct 15 logic gates based on a basic description
+
+NOT:
++ my immediate thought is if you just send the same signal to both inputs of a NAND you get a NOT
+
+AND:
+*** 1.6 Notes before jumping in:
+The general methodology is that I am trying to build a computer one step at a time.
++ 30 different chips
++ start with NAND
++ first project is to make:
+  - NOT + NOT16
+  - AND + AND16
+  - OR
+  - XOR
+  - MUX
+  - DMUX
+  - OR8WAY
+  - MUX4WAY16
+  - MUX8WAY16
+  - DMUX4WAY
+  - DMUX8way
+  These are commonly used in digital devices. They are also all the elementary logic gates needed to build the Hack computer
+
+Mux/Dmux: 2 inputs and a selector
+if (sel==0)
+    out=a
+else
+    out=b
+
+* Project 1 Design Notes
+
+*Objective* : Implement all the logic gates presented in the chapter. The only building blocks that you can use are primitive Nand gates and the composite gates that you will gradually build on top of them
+
+** AND
+I already saw the proof that one can build the AND, NOT and OR gates using the NAND gate so I already have seen one implementation.
+Truth table:
+
+
 
 
 * Appendices
@@ -100,4 +241,97 @@ Proof:
 + Not(x) = Nand(x,x)
 + And(x,y) = Not(Nand(x,y))
 + since not can be expressed through Nand...
+** A2 Hardware Descriptor Language
+*** A2.1 basics
+declarative language.
++ used for specification not 'programming' /so like Hashicorp, I should feel fairly at home/
++ case sensitive
++ HDL keywords are UPPERCASE
++ whitespace is ignored
++ c style comments
+
+
+#+begin_src vhdl
+CHIP Eq3 {
+    IN a, b, b;
+    OUT out;
+    PARTS:
+    Xor(a=a, b=b, out=neq1);
+    Xor(a=b, b=c, out=neq2);
+    Or (a=neq1, b=neq2, out=outOr);
+    Not(in=outOr, out=out);
+}
+
+#+end_src
++ in the PARTS section we create internal pins: neq1 neq2 and outOr
++ the input and output pins are defined in *stub files* and are the API for the chip we are defining
+  - we are only supposed to make alterations to the PARTS section
++ comments are c style // and /** API docs go here */
+
+definitions:
++ Pins : we get 3 types: input, output, and internal
+  - internal pins connect the output of the chip-parts to the inputs of other chip-parts
+  - default is single-bit
+  - can also declare multi-bit pins
++ Names : numbrs and digits, can't start with a digit
+  - chips start with capital letters (convention)
+  - pins : start with lowercase letter (convention)
+  - camelCase can be used
+  - extension is .hdl
+  - the name of the chip must be identical to the (pre extension) filename
++ Structure : HDL program consists of an interface and an implementation.
+  - interface consists of the chip's API documentation, name, and names of input and output pons
+  - implementation consists of everything under PARTS
+  - example:
+    #+begin_src vhdl
+/** API docs: what does this chip do? */
+CHIP ChipName {
+    IN inputPin1, inputPin2, inputPinN;
+    OUT outputPin1, outputPinN;
+
+PARTS:
+    // implementation details go here
+    chipPart(connection, connection, connectio);
+    chipPart(connection, connection);
+    }
+    #+end_src
++ Connections : specified using pin1=pin2 The pins can be input output or internal pin names
+  - the connections can be visualized as wires (or internal traces) connecting the sub-components
+  - for each connection between chipParts there is an internal pin that is listed twice: once as a sink in some chipPart(...) and once as a source in a different chipPart(...)
+  - pins have fan-in 2 and unlimited fan-out meaning a pin can only be fed from a single source but can feed multiple other pins
+  - example:
+    #+begin_src vhdl
+chipPart1(...,out=v,...);    // out of chipPart1 feeds internal pin v
+chipPart2(...,in=v,...);    // in of chipPart2 is fed from v
+chipPart3(...,in1=v,...,in2=v,...);   // in1 and in2 of chipPart3 also feed from v
+    #+end_src
+  - chips in Hack tend to use the same pin names so we end up with (a=a,b=b,out=neq1) this indicates that the a and b inputs of the implemented chip feed the a and b inputs of the Xor chip-part, the 3rd connection is the out (output of the Xor chip-part) to the internal pin neq1
+  - In a chip-part statement the left side of the = (binding) always denotes an input or output of the chip-part. The right side always denotes an input,output, or internal pin of the implemented chip
+*** A2.2 Multi-Bit Buses
+a connection can be the default single bit type or a multi-bit *bus*
++ bits on a bus are numbered from right to left starting from 0. So sel=110 implies that sel[2]=1, sel[1]=1 and sel[0]=0
++ Input and output bus pins: width is specified at declaration in the IN/OUT statements with name[width]
++ the width of internal pins is implicit from the bindings
+  - example from book: chipPart(..., x[i..j]=v,...) this would indicate that v is an internal pin of width j-i+1 (would also set its values to i-j of bus-pin x)
+  - internal pins are not subscripted
++ ~true~ and ~false~ are constants that can be used to define a bus. If we have an 8-bit bus x and the statement chipPart(..., x[0..2] = true, ... x[6..7] = true, ...); this will set x to 11000111
+
+*** A2.3 Built-In Chips
+chips can have 2 types of implementation:
++ native: defined in HDL
++ built-in: defined in (for this simulator) Java
+
+As part of the learning process we can import the built-in versions of chips to see how they work
++ the built-in chips are supplied as jave .class files
+
+The entire Hack computer is built out of around 30 types of chips
++ nand and dff are primitives we get as building blocks to start with
++ the simulator software is general purpose and can be used for more than just the Hack computer
++ when working on more complex chips using the built-ins keeps the simulator from needing to evaluate the lower-level parts
++ some built in chips have GUIs to aid in visualization
++ new components can be added as built-ins to facilitate designing other projects (besides Hack)
+*** A2.4 Sequential Chips
+
+
 * supplemental material
++ Google Talk on the course on yt https://www.youtube.com/watch?v=IlPj5Rg1y2w
