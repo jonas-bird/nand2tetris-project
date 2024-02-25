@@ -321,7 +321,19 @@ CHIP Xor {
 ** TODO DMUX
 [a, b] = ((sel == 0), [in, 0], [0, in])
 
+#+begin_src nand-hdl
+CHIP DMux {
+    IN in, sel;
+    OUT a, b;
 
+    PARTS:
+    And(a=in, b=sel, out=b);
+    And(a=in, b=line0, out=a);
+    Not(in=sel, out=line0);
+}
+#+end_src
+
+At first this seemed complicated but than I started thinking about it from the outputs back and it turned out to be simple.
 
 * Appendices
 ** From Appendix 1: Boolean Function Synthesis
