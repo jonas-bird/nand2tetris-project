@@ -340,9 +340,10 @@ So just an indexed version of the single bit version?
 As the chips get bigger the chance of missing a typo goes up...
 + divide and conquer
 + use the text editor (emacs in my case) and macros to make sure that typos don't happen
-** DONE AND16 OR16 XOR16 MUX16
-When I go off the beaten path and try to design something outside of the project (maybe a CAM module to replicate an ethernet switch?) I am going to need to implement something like Test Driven Development. For anything more complex than a basic gate, testing by hand would be very likely to result in surprising behavior in production.
-
+** DONE AND16 OR16 XOR16
+CLOSED: [2024-02-24 Sat 20:22]
+I am glad I am just using indexed versions of the single bit version. While it would be simple to drop in the implementation 16 times and index each part this would be very messy to read...
+Having test scripts (or at least a means to create them) is also very important as testing by trying to compare outputs would by very error prone. This is also important for larger software projects. Once I move into trying to simulate designs that are off the beaten path I am going to need to adapt TDD to avoid surprising myself...
 
 * Appendices
 ** From Appendix 1: Boolean Function Synthesis
