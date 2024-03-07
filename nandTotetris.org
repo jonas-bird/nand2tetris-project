@@ -336,13 +336,32 @@ CHIP DMux {
 
 At first this seemed complicated but than I started thinking about it from the outputs back and it turned out to be simple.
 ** DONE NOT16
-So just an indexed version of the single bit version?
 As the chips get bigger the chance of missing a typo goes up...
 + divide and conquer
 + use the text editor (emacs in my case) and macros to make sure that typos don't happen
 ** DONE AND16 OR16 XOR16 MUX16
 When I go off the beaten path and try to design something outside of the project (maybe a CAM module to replicate an ethernet switch?) I am going to need to implement something like Test Driven Development. For anything more complex than a basic gate, testing by hand would be very likely to result in surprising behavior in production.
 
+** DONE OR8WAY
+CLOSED: [2024-02-25 Sun 16:32]
+easy
+** DONE MUX4WAY16
+CLOSED: [2024-02-25 Sun 18:50]
+This is simple to build if you think about it from the right level of abstraction.
++ trying to build/even sketch out from basic gates gets complicated quickly.
+
+** DONE MUX8WAY16
+CLOSED: [2024-02-25 Sun 19:00]
+easy
+** DONE DMUX4WAY
+CLOSED: [2024-03-06 Wed 20:51]
+Easy
+
+
+** DONE DMUX8way
+CLOSED: [2024-03-06 Wed 20:52]
+
+Until I looked at the output and realized that pin 2 splits it into 2 directions after which a DMUX4WAY will work
 
 * Appendices
 ** From Appendix 1: Boolean Function Synthesis
